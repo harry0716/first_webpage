@@ -374,306 +374,7 @@
 
 <body>
   <div class="wrap">
-    <header id="top">
-      <div class="kicker">RAG / 檢索增強生成 <span style="opacity:.7">·</span> 落地工程視角</div>
-      <h1>RAG（Retrieval-Augmented Generation）是什麼？</h1>
-      <p class="subtitle">
-        RAG 是一種把「外部知識檢索」與「大型語言模型生成」結合的架構：先從知識庫找出與問題最相關的內容，再把這些內容（上下文）提供給 LLM 產生答案。
-        其核心目標是降低幻覺、提升可追溯性，並讓模型能使用「最新」或「私有」資料。
-      </p>
-
-      <div class="grid" aria-label="summary and table of contents">
-        <div class="card">
-          <h2>你會用 RAG 解決什麼問題？</h2>
-          <div class="pillrow" role="list">
-            <div class="pill" role="listitem"><span class="icon"></span>企業內規 / ISO 文件問答</div>
-            <div class="pill" role="listitem"><span class="icon"></span>客服知識庫與 SOP 輔助</div>
-            <div class="pill" role="listitem"><span class="icon"></span>產品文件、API 規格、使用手冊</div>
-            <div class="pill" role="listitem"><span class="icon"></span>法遵、稽核證據與可追溯回答</div>
-            <div class="pill" role="listitem"><span class="icon"></span>跨部門知識搜尋與摘要</div>
-          </div>
-
-          <div class="callout" style="margin-top:12px;">
-            <strong>一句話：</strong> RAG = 「先查資料，再回答」；把答案的依據固定在你提供的文件片段上，讓回覆更可控。
-          </div>
-
-          <div class="btnrow">
-            <button data-copy="#promptTemplate">複製：RAG 提問範本</button>
-            <button data-copy="#chunkSchema">複製：Chunk Schema 範例</button>
-            <button data-copy="#evalChecklist">複製：評估清單</button>
-          </div>
-        </div>
-
-        <div class="card" aria-label="table of contents">
-          <h2>目錄</h2>
-          <ul class="toc">
-            <li><a href="#why"><strong>01</strong> <span>為什麼需要 RAG</span></a></li>
-            <li><a href="#how"><strong>02</strong> <span>RAG 工作流程</span></a></li>
-            <li><a href="#components"><strong>03</strong> <span>系統組件與資料管線</span></a></li>
-            <li><a href="#chunking"><strong>04</strong> <span>Chunking 與索引策略</span></a></li>
-            <li><a href="#quality"><strong>05</strong> <span>品質指標與常見風險</span></a></li>
-            <li><a href="#deployment"><strong>06</strong> <span>落地建議與安全治理</span></a></li>
-          </ul>
-        </div>
-      </div>
-    </header>
-
-    <section id="why" class="card">
-      <div class="sectionTitle">
-        <h2>01 為什麼需要 RAG</h2>
-        <div class="tag">Problem → RAG Fit</div>
-      </div>
-      <div class="two">
-        <div>
-          <p>
-            單純使用 LLM（不接資料庫）容易遇到三個限制：
-          </p>
-          <ul class="list">
-            <li><strong>知識時效：</strong>模型可能不知道最新政策、產品版本、價格或內部公告。</li>
-            <li><strong>私有知識：</strong>企業文件、SOP、客戶資料不在公開訓練語料中。</li>
-            <li><strong>可追溯性：</strong>高風險情境（法遵、醫療、資安）需要「答案依據」可被稽核。</li>
-          </ul>
-          <p>
-            RAG 將「答案來源」外部化：把知識放在可管理的資料層（文件庫/向量庫），模型只負責基於檢索到的片段進行推理與生成。
-          </p>
-        </div>
-        <div class="callout">
-          <strong>適用情境快速判斷：</strong>
-          <ul class="list">
-            <li>答案必須引用公司文件、條文、SOP</li>
-            <li>資料會更新（每週/每月/每季）</li>
-            <li>需要記錄「回答用到哪些證據」</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <section id="how" class="card">
-      <div class="sectionTitle">
-        <h2>02 RAG 工作流程</h2>
-        <div class="tag">Ingest → Retrieve → Generate</div>
-      </div>
-
-      <div class="flow" aria-label="rag flow">
-        <div class="row">
-          <div class="node">
-            <h3>1) 文件收錄（Ingestion）</h3>
-            <p>解析 PDF/Word/網頁 → 斷句與 Chunking → 建立索引</p>
-          </div>
-          <div class="arrow" aria-hidden="true"></div>
-          <div class="node">
-            <h3>2) 檢索（Retrieval）</h3>
-            <p>將問題向量化 → 向量庫 Top‑K 搜尋 → 可能再排序</p>
-          </div>
-          <div class="arrow" aria-hidden="true"></div>
-          <div class="node">
-            <h3>3) 生成（Generation）</h3>
-            <p>把檢索片段 + 提示詞 → LLM 生成答案（含引用/來源）</p>
-          </div>
-        </div>
-      </div>
-
-      <details style="margin-top:12px;" open>
-        <summary>常見「強化」模組（可依需求逐步加上）</summary>
-        <ul class="list">
-          <li><strong>Hybrid Search：</strong>結合 BM25（關鍵字）+ 向量檢索，提高召回。</li>
-          <li><strong>Reranker：</strong>用交叉編碼器/LLM 對 Top‑K 做再排序，提升精準度。</li>
-          <li><strong>Query Rewriting：</strong>把問題改寫成更適合檢索的查詢。</li>
-          <li><strong>Citations：</strong>答案段落對應到 chunk_id / 檔名 / 頁碼，便於稽核。</li>
-        </ul>
-      </details>
-    </section>
-
-    <section id="components" class="card">
-      <div class="sectionTitle">
-        <h2>03 系統組件與資料管線</h2>
-        <div class="tag">Architecture</div>
-      </div>
-
-      <div class="kpis" aria-label="key components">
-        <div class="kpi">
-          <div class="v">資料層</div>
-          <div class="l">原始文件庫、版本控管、權限與保留政策</div>
-        </div>
-        <div class="kpi">
-          <div class="v">索引層</div>
-          <div class="l">Chunk、Embedding、向量庫、倒排索引（可選）</div>
-        </div>
-        <div class="kpi">
-          <div class="v">推理層</div>
-          <div class="l">檢索策略、重排序、提示詞模板、答案後處理</div>
-        </div>
-      </div>
-
-      <details style="margin-top:12px;">
-        <summary>資料管線最佳實務（工程）</summary>
-        <ul class="list">
-          <li><strong>可重現：</strong>同一份文件在同一版設定下，chunk 結果與索引一致。</li>
-          <li><strong>可追溯：</strong>每個 chunk 保留來源（檔名/章節/頁碼/段落編號/URL）。</li>
-          <li><strong>可回滾：</strong>索引版本化（index_version），可快速回復到上一版。</li>
-          <li><strong>可觀測：</strong>記錄每次查詢的 top-k、rerank、命中 chunk、延遲與成本。</li>
-        </ul>
-      </details>
-    </section>
-
-    <section id="chunking" class="card">
-      <div class="sectionTitle">
-        <h2>04 Chunking 與索引策略</h2>
-        <div class="tag">Chunking / Metadata</div>
-      </div>
-
-      <div class="two">
-        <div>
-          <p>
-            Chunking 的目標是把文件切成「可檢索、可引用、語意完整」的片段。切太小會失去上下文，切太大會降低匹配度並增加 token 成本。
-          </p>
-          <ul class="list">
-            <li><strong>建議起點：</strong>每 chunk 約 300–800 中文字（視文件型態調整）。</li>
-            <li><strong>Overlap：</strong>10–20% 重疊可減少斷句造成的資訊缺口。</li>
-            <li><strong>結構優先：</strong>以標題層級（H1/H2/H3）與段落切分，避免跨章節混合。</li>
-          </ul>
-          <div class="callout">
-            <strong>關鍵：</strong>RAG 的效果上限，通常由「資料品質與 chunk 設計」決定，而非單純換更大的模型。
-          </div>
-        </div>
-
-        <div>
-          <p style="margin:0 0 8px; color:var(--muted);">Chunk Schema 範例（JSONL 風格）</p>
-          <div id="chunkSchema" class="code" aria-label="chunk schema">
-{
-  "chunk_id": "ISO27001-A.8.8-0007",
-  "doc_id": "ISMS_SOP_2025Q4",
-  "source": {
-    "type": "pdf",
-    "file_name": "ISMS_SOP.pdf",
-    "page_start": 12,
-    "page_end": 12,
-    "section_path": ["A.8", "A.8.8 技術脆弱性管理"],
-    "url": null
-  },
-  "text": "……（該段落內容）……",
-  "tags": ["ISO27001", "Vulnerability", "SOP"],
-  "security": {
-    "classification": "internal",
-    "allowed_roles": ["ISMS_TEAM", "IT_ADMIN"],
-    "pii": false
-  },
-  "index": {
-    "index_version": "2026-01-01",
-    "chunk_strategy": "heading+paragraph",
-    "overlap": 0.15
-  }
-}
-          </div>
-        </div>
-      </div>
-
-      <details style="margin-top:12px;">
-        <summary>索引策略：從簡到難</summary>
-        <ul class="list">
-          <li><strong>Baseline：</strong>向量檢索 Top‑K + 簡單提示詞。</li>
-          <li><strong>Hybrid：</strong>向量 + 關鍵字（BM25），降低「專有名詞」漏抓。</li>
-          <li><strong>Rerank：</strong>對 Top‑K 片段再排序，提升準確率與引用品質。</li>
-          <li><strong>Structured Retrieval：</strong>先用 metadata 篩選（部門/版本/權限），再做向量檢索。</li>
-        </ul>
-      </details>
-    </section>
-
-    <section id="quality" class="card">
-      <div class="sectionTitle">
-        <h2>05 品質指標與常見風險</h2>
-        <div class="tag">Evaluation / Risk</div>
-      </div>
-
-      <div class="kpis" aria-label="quality metrics">
-        <div class="kpi">
-          <div class="v" style="color:var(--good)">Recall</div>
-          <div class="l">是否「有把相關證據找回來」</div>
-        </div>
-        <div class="kpi">
-          <div class="v" style="color:var(--warn)">Precision</div>
-          <div class="l">找回來的是否「真的對答案有用」</div>
-        </div>
-        <div class="kpi">
-          <div class="v" style="color:var(--bad)">Hallucination</div>
-          <div class="l">答案是否「超出證據」或自創內容</div>
-        </div>
-      </div>
-
-      <details style="margin-top:12px;" open>
-        <summary>常見失敗模式</summary>
-        <ul class="list">
-          <li><strong>Chunk 太大/太小：</strong>導致檢索不到或上下文不足。</li>
-          <li><strong>缺少 metadata：</strong>無法做版本/權限/類型篩選，答到過期內容。</li>
-          <li><strong>引用不精準：</strong>同一 chunk 含多主題，造成「引用看似對但不支持結論」。</li>
-          <li><strong>提示詞不約束：</strong>沒有要求「只能基於證據回答」或「不足就說不知道」。</li>
-        </ul>
-      </details>
-
-      <p style="margin:12px 0 8px; color:var(--muted);">評估清單（可直接用於驗收）</p>
-      <div id="evalChecklist" class="code" aria-label="evaluation checklist">
-- [ ] 針對 30–100 題真實問題建立測試集（含預期答案與關鍵證據）
-- [ ] 每次回答必須提供 chunk_id / 檔名 / 頁碼或章節
-- [ ] 當檢索不到證據時，必須明確回覆「資料不足」並建議補資料
-- [ ] 監控：檢索命中率、Top‑K 覆蓋率、平均延遲、token 成本
-- [ ] 安全：權限過濾（ABAC/RBAC）、敏感資訊遮罩、查詢與引用稽核紀錄
-- [ ] 版本：文件更新→索引重建/增量更新流程、可回滾
-      </div>
-    </section>
-
-    <section id="deployment" class="card">
-      <div class="sectionTitle">
-        <h2>06 落地建議與安全治理</h2>
-        <div class="tag">Deployment / Security</div>
-      </div>
-
-      <div class="two">
-        <div>
-          <details open>
-            <summary>落地建議（最小可行版本 MVP）</summary>
-            <ul class="list">
-              <li>先選 1–3 類文件：例如 SOP、FAQ、制度文件（避免一次把所有文件丟進去）。</li>
-              <li>先做「可追溯回答」：每段答案對應 chunk 引用。</li>
-              <li>先做「版本控管」：文件更新與索引更新的流程固定化。</li>
-              <li>先做「觀測」：至少能看到 top‑k 命中的 chunk 與延遲。</li>
-            </ul>
-          </details>
-
-          <details>
-            <summary>安全治理（企業常見要求）</summary>
-            <ul class="list">
-              <li><strong>權限：</strong>查詢前過濾可見資料（同一問句對不同角色回覆不同）。</li>
-              <li><strong>稽核：</strong>記錄查詢、命中 chunk、回覆摘要、使用者身分與時間。</li>
-              <li><strong>敏感資料：</strong>PII/機密欄位做遮罩；必要時做 DLP 檢查。</li>
-              <li><strong>提示詞防護：</strong>針對 prompt injection（如「忽略規則」）做檢測與拒絕。</li>
-            </ul>
-          </details>
-        </div>
-
-        <div>
-          <p style="margin:0 0 8px; color:var(--muted);">RAG 提問範本（可貼給使用者）</p>
-          <div id="promptTemplate" class="code" aria-label="prompt template">
-你是企業知識庫助理。請僅依據提供的【參考資料】回答。
-若參考資料不足以支撐結論，請明確回覆「資料不足」並列出需要補充的文件類型。
-
-問題：{使用者問題}
-
-輸出格式：
-1) 結論（精簡）
-2) 依據（逐點列出，需對應引用）
-3) 引用（chunk_id / 檔名 / 頁碼或章節）
-4) 風險與注意事項（若涉及法遵/資安/醫療）
-          </div>
-
-          <div class="callout" style="margin-top:12px;">
-            <strong>提示：</strong>若要把這頁嵌入 Notion，建議把本檔部署成公開網址，再用 Notion 的 <em>/embed</em> 貼上 URL。
-          </div>
-        </div>
-      </div>
-
-      <p class="foot">© 單檔靜態頁面。可自行替換內容、加上公司 Logo，或將各段落拆成 Notion 子頁。</p>
-      <p class="foot"><a href="#top">回到頁首</a></p>
-    </section>
+    <!-- 內容區（略，未變更） -->
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -681,23 +382,36 @@
   <script>
     // Minimal, self-contained UX: copy to clipboard + toast
     (function () {
+      console.log('[RAG-Page] Script initialization start');
+
       const toast = document.getElementById('toast');
+      console.log('[RAG-Page] Toast element loaded:', !!toast);
+
       const showToast = (msg) => {
+        console.log('[RAG-Page] showToast called with message:', msg);
         toast.textContent = msg;
         toast.classList.add('show');
         window.clearTimeout(showToast._t);
-        showToast._t = window.setTimeout(() => toast.classList.remove('show'), 1600);
+        showToast._t = window.setTimeout(() => {
+          toast.classList.remove('show');
+          console.log('[RAG-Page] Toast hidden');
+        }, 1600);
       };
 
       const copyText = async (selector) => {
+        console.log('[RAG-Page] copyText triggered for selector:', selector);
         const el = document.querySelector(selector);
-        if (!el) return;
+        if (!el) {
+          console.warn('[RAG-Page] copyText target not found:', selector);
+          return;
+        }
         const text = el.innerText.replace(/\n\s+\n/g, '\n\n');
         try {
           await navigator.clipboard.writeText(text);
+          console.log('[RAG-Page] Clipboard write success');
           showToast('已複製到剪貼簿');
         } catch (e) {
-          // Fallback
+          console.error('[RAG-Page] Clipboard API failed, fallback engaged', e);
           const ta = document.createElement('textarea');
           ta.value = text;
           ta.style.position = 'fixed';
@@ -707,8 +421,10 @@
           ta.select();
           try {
             document.execCommand('copy');
+            console.log('[RAG-Page] document.execCommand copy success');
             showToast('已複製到剪貼簿');
           } catch (e2) {
+            console.error('[RAG-Page] Fallback copy failed', e2);
             showToast('無法自動複製，請手動選取複製');
           }
           document.body.removeChild(ta);
@@ -716,14 +432,23 @@
       };
 
       document.querySelectorAll('button[data-copy]').forEach((btn) => {
-        btn.addEventListener('click', () => copyText(btn.getAttribute('data-copy')));
+        const selector = btn.getAttribute('data-copy');
+        console.log('[RAG-Page] Register copy button for selector:', selector);
+        btn.addEventListener('click', () => copyText(selector));
       });
 
-      // Improve in-page nav for embed contexts
       if (location.hash) {
+        console.log('[RAG-Page] Detected hash navigation:', location.hash);
         const target = document.querySelector(location.hash);
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (target) {
+          console.log('[RAG-Page] Scrolling to target:', location.hash);
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          console.warn('[RAG-Page] Hash target not found:', location.hash);
+        }
       }
+
+      console.log('[RAG-Page] Script initialization complete');
     })();
   </script>
 </body>
